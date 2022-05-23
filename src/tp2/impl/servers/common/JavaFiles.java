@@ -42,11 +42,13 @@ public class JavaFiles implements Files {
 
 	private static final String UPLOAD_FILE_URL = "https://content.dropboxapi.com/2/files/upload";
 	private static final String DOWNLOAD_FILE_URL = "https://content.dropboxapi.com/2/files/download";
+	private static final String DELETE_FILE_URL = "https://api.dropboxapi.com/2/files/delete_v2";
 
 
 	private static final String CONTENT_TYPE_HDR = "Content-Type";
 	/* private static final String JSON_CONTENT_TYPE = "application/octet-stream"; */
 	private static final String OCTET_STREAM_CONTENT_TYPE = "application/octet-stream";
+	private static fin
 
 	private final Gson json;
     private final OAuth20Service service;
@@ -64,13 +66,10 @@ public class JavaFiles implements Files {
 		
 		fileId = fileId.replace( DELIMITER, "/");
 
-		var downloadFile = new OAuthRequest(Verb.GET, DOWNLOAD_FILE_URL);
+		var downloadFile = new OAuthRequest(Verb.POST, DOWNLOAD_FILE_URL);
 
 		downloadFile.addHeader(CONTENT_TYPE_HDR, OCTET_STREAM_CONTENT_TYPE);
 		downloadFile.addHeader(DROPBOX_API_ARG, json.toJson(new DownloadFileArgs("/"+fileId)));
-
-		System.out.println(fileId);
-		System.out.println("-------------------------------------------------------\n\n\n\n\n\n");
 
 		service.signRequest(accessToken, downloadFile);
 
@@ -79,7 +78,7 @@ public class JavaFiles implements Files {
 		try {
 			r = service.execute(downloadFile);
 			if (r.getCode() != Status.OK.getStatusCode()) {
-				throw new RuntimeException(String.format("Failed to upload file: %s, Status: %d, \nReason: %s\n", fileId, r.getCode(), r.getBody()));
+				throw new RuntimeException(String.format("Failed to download file: %s, Status: %d, \nReason: %s\n", fileId, r.getCode(), r.getBody()));
 			}
 
 			data = r.getStream().readAllBytes();
@@ -93,9 +92,28 @@ public class JavaFiles implements Files {
 
 	@Override
 	public Result<Void> deleteFile(String fileId, String token) {
+
 		fileId = fileId.replace( DELIMITER, "/");
-		boolean res = IO.delete( new File( ROOT + fileId ));	
-		return res ? ok() : error( NOT_FOUND );
+
+		var deleteFile = new OAuthRequest(Verb.DELETE, DELETE_FILE_URL);
+
+		uploadFile.addHeader(CONTENT_TYPE_HDR, JSON_CONTENT_TYPE);
+
+		deleteFile.setPayload("/"+fileId);;
+
+		service.signRequest(accessToken, deleteFile);
+
+		Response r;
+		try {
+			r = service.execute(deleteFile);
+			if (r.getCode() != Status.OK.getStatusCode()) {
+				throw new RuntimeException(String.format("Failed to upload file: %s, Status: %d, \nReason: %s\n", fileId, r.getCode(), r.getBody()));
+			}
+		} catch (InterruptedException | ExecutionException | IOException e) {
+			e.printStackTrace();
+		}
+
+		return ok();
 	}
 
 	@Override
