@@ -26,7 +26,7 @@ import com.google.gson.Gson;
 
 import tp2.api.service.java.Files;
 import tp2.api.service.java.Result;
-import tp2.impl.servers.dropbox.msgs.UploadFileArgs;
+import tp2.impl.servers.dropbox.msgs.*;
 import util.IO;
 
 public class JavaFiles implements Files {
@@ -41,6 +41,7 @@ public class JavaFiles implements Files {
 	private static final String DROPBOX_API_ARG = "Dropbox-API-Arg";
 
 	private static final String UPLOAD_FILE_URL = "https://content.dropboxapi.com/2/files/upload";
+	private static final String DOWNLOAD_FILE_URL = "https://content.dropboxapi.com/2/files/download";
 
 
 	private static final String CONTENT_TYPE_HDR = "Content-Type";
@@ -60,8 +61,33 @@ public class JavaFiles implements Files {
 
 	@Override
 	public Result<byte[]> getFile(String fileId, String token) {
+		
 		fileId = fileId.replace( DELIMITER, "/");
-		byte[] data = IO.read( new File( ROOT + fileId ));
+
+		var downloadFile = new OAuthRequest(Verb.GET, DOWNLOAD_FILE_URL);
+
+		downloadFile.addHeader(CONTENT_TYPE_HDR, OCTET_STREAM_CONTENT_TYPE);
+		downloadFile.addHeader(DROPBOX_API_ARG, json.toJson(new DownloadFileArgs("/"+fileId)));
+
+		System.out.println(fileId);
+		System.out.println("-------------------------------------------------------\n\n\n\n\n\n");
+
+		service.signRequest(accessToken, downloadFile);
+
+		Response r;
+		byte[] data = null;
+		try {
+			r = service.execute(downloadFile);
+			if (r.getCode() != Status.OK.getStatusCode()) {
+				throw new RuntimeException(String.format("Failed to upload file: %s, Status: %d, \nReason: %s\n", fileId, r.getCode(), r.getBody()));
+			}
+
+			data = r.getStream().readAllBytes();
+		} catch (InterruptedException | ExecutionException | IOException e) {
+			e.printStackTrace();
+		}
+
+
 		return data != null ? ok( data) : error( NOT_FOUND );
 	}
 
@@ -74,6 +100,7 @@ public class JavaFiles implements Files {
 
 	@Override
 	public Result<Void> writeFile(String fileId, byte[] data, String token) {
+		fileId = fileId.replace( DELIMITER, "/");
 		
 		var uploadFile = new OAuthRequest(Verb.POST, UPLOAD_FILE_URL);
 
