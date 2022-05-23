@@ -48,7 +48,7 @@ public class JavaFiles implements Files {
 	private static final String CONTENT_TYPE_HDR = "Content-Type";
 	/* private static final String JSON_CONTENT_TYPE = "application/octet-stream"; */
 	private static final String OCTET_STREAM_CONTENT_TYPE = "application/octet-stream";
-	private static fin
+	private static final String JSON_CONTENT_TYPE = "application/json; charset=utf-8";
 
 	private final Gson json;
     private final OAuth20Service service;
@@ -95,11 +95,11 @@ public class JavaFiles implements Files {
 
 		fileId = fileId.replace( DELIMITER, "/");
 
-		var deleteFile = new OAuthRequest(Verb.DELETE, DELETE_FILE_URL);
+		var deleteFile = new OAuthRequest(Verb.POST, DELETE_FILE_URL);
 
-		uploadFile.addHeader(CONTENT_TYPE_HDR, JSON_CONTENT_TYPE);
+		deleteFile.addHeader(CONTENT_TYPE_HDR, JSON_CONTENT_TYPE);
 
-		deleteFile.setPayload("/"+fileId);;
+		deleteFile.setPayload("/"+ fileId);;
 
 		service.signRequest(accessToken, deleteFile);
 
