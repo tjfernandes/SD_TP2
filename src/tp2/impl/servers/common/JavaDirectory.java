@@ -40,6 +40,7 @@ public class JavaDirectory implements Directory {
 
 	static final long USER_CACHE_EXPIRATION = 3000;
 
+
 	final LoadingCache<UserInfo, Result<User>> users = CacheBuilder.newBuilder()
 			.expireAfterWrite( Duration.ofMillis(USER_CACHE_EXPIRATION))
 			.build(new CacheLoader<>() {
