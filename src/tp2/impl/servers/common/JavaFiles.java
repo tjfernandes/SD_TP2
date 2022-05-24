@@ -38,7 +38,7 @@ public class JavaFiles implements Files {
 
 	private static final String apiKey = "47oz8vghuy85fo1";
 	private static final String apiSecret = "3ofuvr93vzhuta4";
-	private static final String accessTokenStr = "sl.BIPDvcNnguMx6g5UqsxW0eI2-iXrhRThutMaSP0Kmo92a4rPQC4chXEgyf0IncjANQiKshbAoyLK-niRj_oa3FvVkykD7wbO1qP_bNDDDoXAesHpknyHjsye8atF_fNWTkUqzd4";
+	private static final String accessTokenStr = "sl.BIOFN8vffH8UwULNlqeRFpwNwPIOrfYuG3_SWw-C2ONejncijkXNiO6_54Ewjl-e1JMsMMMaUkHxaSrl-er_sEc2-hbkgwQDDFMYVuIB6Q6B6pJ3Sup-9yYg6l1hTcOiXeVDPVY";
 
 	private static final String DROPBOX_API_ARG = "Dropbox-API-Arg";
 
@@ -149,16 +149,17 @@ public class JavaFiles implements Files {
 
 	@Override
 	public Result<Void> deleteUserFiles(String userId, String token) {
-		var uploadFile = new OAuthRequest(Verb.POST, UPLOAD_FILE_URL);
+		var deleteFolder = new OAuthRequest(Verb.POST, DELETE_FILE_URL);
 
-		uploadFile.addHeader(CONTENT_TYPE_HDR, OCTET_STREAM_CONTENT_TYPE);
-		uploadFile.addHeader(DROPBOX_API_ARG, json.toJson(new DeleteArg("/"+userId)));
+		deleteFolder.addHeader(CONTENT_TYPE_HDR, JSON_CONTENT_TYPE);
 
-		service.signRequest(accessToken, uploadFile);
+		deleteFolder.setPayload(json.toJson(new DeleteArg("/"+userId)));
+
+		service.signRequest(accessToken, deleteFolder);
 
 		Response r;
 		try {
-			r = service.execute(uploadFile);
+			r = service.execute(deleteFolder);
 			if (r.getCode() != Status.OK.getStatusCode()) {
 				throw new RuntimeException(String.format("Failed to delete files from user: %s, Status: %d, \nReason: %s\n", userId, r.getCode(), r.getBody()));
 			}
