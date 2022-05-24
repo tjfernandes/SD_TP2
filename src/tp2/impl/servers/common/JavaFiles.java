@@ -12,6 +12,7 @@ import java.util.Comparator;
 import java.util.concurrent.ExecutionException;
 import java.util.logging.Logger;
 
+import com.dropbox.core.v2.files.DeleteArg;
 import org.pac4j.scribe.builder.api.DropboxApi20;
 
 import jakarta.ws.rs.core.Response.Status;
@@ -79,7 +80,7 @@ public class JavaFiles implements Files {
 		try {
 			r = service.execute(downloadFile);
 			if (r.getCode() != Status.OK.getStatusCode()) {
-				throw new RuntimeException(String.format("Failed to download file: %s, Status: %d, \nReason: %s\n", fileId, r.getCode(), r.getBody()));
+				System.out.println(String.format("\n\n\n\nFailed to download file: %s, Status: %d, \nReason: %s\n", fileId, r.getCode(), r.getBody()));
 			}
 
 			data = r.getStream().readAllBytes();
@@ -100,7 +101,7 @@ public class JavaFiles implements Files {
 
 		deleteFile.addHeader(CONTENT_TYPE_HDR, JSON_CONTENT_TYPE);
 
-		deleteFile.setPayload("/"+ fileId);;
+		deleteFile.setPayload(json.toJson(new DeleteArg("/"+fileId)));
 
 		service.signRequest(accessToken, deleteFile);
 
@@ -108,7 +109,9 @@ public class JavaFiles implements Files {
 		try {
 			r = service.execute(deleteFile);
 			if (r.getCode() != Status.OK.getStatusCode()) {
-				throw new RuntimeException(String.format("Failed to upload file: %s, Status: %d, \nReason: %s\n", fileId, r.getCode(), r.getBody()));
+				System.out.println(String.format("\n\n\n\n\nFailed to delete file: %s, Status: %d, \nReason: %s\n", fileId, r.getCode(), r.getBody()));
+				if (r.getCode() == Status.NOT_FOUND.getStatusCode())
+					return error(NOT_FOUND);
 			}
 		} catch (InterruptedException | ExecutionException | IOException e) {
 			e.printStackTrace();
@@ -134,7 +137,7 @@ public class JavaFiles implements Files {
 		try {
 			r = service.execute(uploadFile);
 			if (r.getCode() != Status.OK.getStatusCode()) {
-				throw new RuntimeException(String.format("Failed to upload file: %s, Status: %d, \nReason: %s\n", fileId, r.getCode(), r.getBody()));
+				throw new RuntimeException(String.format("\n\n\n\nFailed to upload file: %s, Status: %d, \nReason: %s\n", fileId, r.getCode(), r.getBody()));
 			}
 		} catch (InterruptedException | ExecutionException | IOException e) {
 			e.printStackTrace();
@@ -146,16 +149,23 @@ public class JavaFiles implements Files {
 
 	@Override
 	public Result<Void> deleteUserFiles(String userId, String token) {
-		File file = new File(ROOT + userId);
+		var uploadFile = new OAuthRequest(Verb.POST, UPLOAD_FILE_URL);
+
+		uploadFile.addHeader(CONTENT_TYPE_HDR, OCTET_STREAM_CONTENT_TYPE);
+		uploadFile.addHeader(DROPBOX_API_ARG, json.toJson(new DeleteArg("/"+userId)));
+
+		service.signRequest(accessToken, uploadFile);
+
+		Response r;
 		try {
-			java.nio.file.Files.walk(file.toPath())
-			.sorted(Comparator.reverseOrder())
-			.map(Path::toFile)
-			.forEach(File::delete);
-		} catch (IOException e) {
+			r = service.execute(uploadFile);
+			if (r.getCode() != Status.OK.getStatusCode()) {
+				throw new RuntimeException(String.format("Failed to delete files from user: %s, Status: %d, \nReason: %s\n", userId, r.getCode(), r.getBody()));
+			}
+		} catch (InterruptedException | ExecutionException | IOException e) {
 			e.printStackTrace();
-			return error(INTERNAL_ERROR);
 		}
+
 		return ok();
 	}
 
