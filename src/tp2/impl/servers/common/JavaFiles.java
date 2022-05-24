@@ -27,6 +27,7 @@ import com.google.gson.Gson;
 import tp2.api.service.java.Files;
 import tp2.api.service.java.Result;
 import tp2.impl.servers.dropbox.msgs.*;
+import com.dropbox.core.v2.files.WriteMode;
 import util.IO;
 
 public class JavaFiles implements Files {
@@ -36,7 +37,7 @@ public class JavaFiles implements Files {
 
 	private static final String apiKey = "47oz8vghuy85fo1";
 	private static final String apiSecret = "3ofuvr93vzhuta4";
-	private static final String accessTokenStr = "sl.BILFaB9A-sOu-v1rTJ2vekmiB1L8dHtcjtnmEe-q5qoZKZrPDagQ4-NPY5CBA_Xbz-kfCVnZHQKuBrIOJqHWGgjjw_5PtnPs8J8In2YqHJiNuiMEOjL03tDbnb4_3aQP--vRvd0";
+	private static final String accessTokenStr = "sl.BIPDvcNnguMx6g5UqsxW0eI2-iXrhRThutMaSP0Kmo92a4rPQC4chXEgyf0IncjANQiKshbAoyLK-niRj_oa3FvVkykD7wbO1qP_bNDDDoXAesHpknyHjsye8atF_fNWTkUqzd4";
 
 	private static final String DROPBOX_API_ARG = "Dropbox-API-Arg";
 
@@ -123,7 +124,7 @@ public class JavaFiles implements Files {
 		var uploadFile = new OAuthRequest(Verb.POST, UPLOAD_FILE_URL);
 
 		uploadFile.addHeader(CONTENT_TYPE_HDR, OCTET_STREAM_CONTENT_TYPE);
-		uploadFile.addHeader(DROPBOX_API_ARG, json.toJson(new UploadFileArgs("/"+fileId, false)));
+		uploadFile.addHeader(DROPBOX_API_ARG, json.toJson(new UploadFileArgs("/"+fileId, WriteMode.OVERWRITE.tag().toString().toLowerCase())));
 
 		uploadFile.setPayload(data);
 

@@ -159,5 +159,10 @@
 				<artifactId>pac4j-oauth</artifactId>
 				<version>5.4.3</version>
 			</dependency>
+			<dependency>
+				<groupId>com.dropbox.core</groupId>
+				<artifactId>dropbox-core-sdk</artifactId>
+				<version>5.2.0</version>
+			</dependency>
 	</dependencies>
 </project>
