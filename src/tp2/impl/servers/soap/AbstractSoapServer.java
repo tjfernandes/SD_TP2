@@ -1,14 +1,23 @@
 package tp2.impl.servers.soap;
 
+import java.net.InetSocketAddress;
+import java.util.concurrent.Executors;
 import java.util.logging.Logger;
 
-import jakarta.xml.ws.Endpoint;
+import javax.net.ssl.SSLContext;
+
 import tp2.impl.discovery.Discovery;
 import tp2.impl.servers.common.AbstractServer;
 import util.IP;
 
+import com.dropbox.core.v2.team.GetDevicesReport;
+import com.sun.net.httpserver.HttpsConfigurator;
+import com.sun.net.httpserver.HttpsServer;
+
+import jakarta.xml.ws.Endpoint;
+
 public class AbstractSoapServer extends AbstractServer{
-	private static String SERVER_BASE_URI = "http://%s:%s/soap";
+	private static String SERVER_BASE_URI = "https://%s:%s/soap";
 
 	final Object implementor;
 	
@@ -25,13 +34,30 @@ public class AbstractSoapServer extends AbstractServer{
 	}
 	
 	protected void start() {
-		var ip = IP.hostAddress();
-		var serverURI = String.format(SERVER_BASE_URI, ip, port);
+		try {
 
-		Endpoint.publish(serverURI.replace(ip, INETADDR_ANY), implementor );
+			var ip = IP.hostAddress();
+			var serverURI = String.format(SERVER_BASE_URI, ip, port);
 
-		Discovery.getInstance().announce(service, serverURI);
+			var server = HttpsServer.create(new InetSocketAddress(ip, port), 0);
 
-		Log.info(String.format("%s Soap Server ready @ %s\n", service, serverURI));
+			server.setExecutor(Executors.newCachedThreadPool());
+			server.setHttpsConfigurator(new HttpsConfigurator(SSLContext.getDefault()));
+
+			var endpoint = Endpoint.create(new SoapUsersWebService());
+			endpoint.publish(server.createContext("/soap"));
+
+			server.start();
+
+			Discovery.getInstance().announce(service, serverURI);
+
+			Log.info(String.format("%s Soap Server ready @ %s\n", service, serverURI));
+
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+
+
+		
 	}
 }

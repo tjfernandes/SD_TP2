@@ -1,0 +1,27 @@
+mvn clean compile assembly:single docker:build
+
+
+test-sd-tp2.bat -image sd2122-tp2-57677-58125 -log ALL -sleep 6
+
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+Keystore:
+keytool -genkey -alias <server-name> -keyalg RSA -validity 365 -keystore <keystore-filename> -storetype pkcs12
+
+Self-signed certificate:
+keytool -exportcert -alias <server-name> -keystore <keystore-filename> -file <file-certificate>
+
+Truststore:
+keytool -importcert -file <file-certificate> -alias <server-name> -keystore <truststore-filename>
+
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+Keystore users.jks pass: users-57677-58125
+Keystore directory.jks pass: directory-57677-58125
+Keystore files.jks pass: files-57677-58125
+
+Truststore client-ts.jks pass: client-57677-58125

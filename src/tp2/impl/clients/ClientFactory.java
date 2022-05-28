@@ -5,12 +5,15 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.function.Function;
 
+import javax.net.ssl.HttpsURLConnection;
+
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
 
 import tp2.api.service.java.Result.ErrorCode;
 import tp2.impl.discovery.Discovery;
+import tp2.tls.InsecureHostnameVerifier;
 
 public class ClientFactory<T> {
 
@@ -22,6 +25,8 @@ public class ClientFactory<T> {
 	private final Function<URI, T> soapClient;
 	
 	ClientFactory( String serviceName, Function<URI, T> restClient, Function<URI, T> soapClient) {
+		HttpsURLConnection.setDefaultHostnameVerifier(new InsecureHostnameVerifier());
+
 		this.restClient = restClient;
 		this.soapClient = soapClient;
 		this.serviceName = serviceName;
