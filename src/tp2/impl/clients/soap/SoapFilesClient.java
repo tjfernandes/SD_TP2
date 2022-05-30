@@ -2,12 +2,14 @@ package tp2.impl.clients.soap;
 
 import java.net.URI;
 
+import javax.net.ssl.HttpsURLConnection;
 import javax.xml.namespace.QName;
 
 import jakarta.xml.ws.Service;
 import tp2.api.service.java.Files;
 import tp2.api.service.java.Result;
 import tp2.api.service.soap.SoapFiles;
+import tp2.tls.InsecureHostnameVerifier;
 import util.Url;
 
 public class SoapFilesClient extends SoapClient<SoapFiles> implements Files {
@@ -15,6 +17,7 @@ public class SoapFilesClient extends SoapClient<SoapFiles> implements Files {
 	public SoapFilesClient(URI serverURI) {
 		super(serverURI, () -> {
 			QName QNAME = new QName(SoapFiles.NAMESPACE, SoapFiles.NAME);
+			HttpsURLConnection.setDefaultHostnameVerifier(new InsecureHostnameVerifier());
 			Service service = Service.create(Url.from(serverURI + WSDL), QNAME);
 			return service.getPort(tp2.api.service.soap.SoapFiles.class);			
 		});

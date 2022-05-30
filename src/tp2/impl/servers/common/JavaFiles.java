@@ -38,7 +38,7 @@ public class JavaFiles implements Files {
 
 	private static final String apiKey = "47oz8vghuy85fo1";
 	private static final String apiSecret = "3ofuvr93vzhuta4";
-	private static final String accessTokenStr = "sl.BIOFN8vffH8UwULNlqeRFpwNwPIOrfYuG3_SWw-C2ONejncijkXNiO6_54Ewjl-e1JMsMMMaUkHxaSrl-er_sEc2-hbkgwQDDFMYVuIB6Q6B6pJ3Sup-9yYg6l1hTcOiXeVDPVY";
+	private static final String accessTokenStr = "sl.BInRZewcGim0zB1oHFqoqP8aalSSZns4e5vuctXATyecA7VsNSk0aqD7MWKassdWADJxKK7T8pcztjgykAUp9xjRc2Stef-AbkPgBpwtkWW9US2sDF0hj1W8eLNdV2MnwY7QpJE";
 
 	private static final String DROPBOX_API_ARG = "Dropbox-API-Arg";
 

@@ -3,6 +3,7 @@ package tp2.impl.clients.soap;
 import java.net.URI;
 import java.util.List;
 
+import javax.net.ssl.HttpsURLConnection;
 import javax.xml.namespace.QName;
 
 import jakarta.xml.ws.Service;
@@ -10,13 +11,15 @@ import tp2.api.User;
 import tp2.api.service.java.Result;
 import tp2.api.service.java.Users;
 import tp2.api.service.soap.SoapUsers;
+import tp2.tls.InsecureHostnameVerifier;
 import util.Url;
 
 public class SoapUsersClient extends SoapClient<SoapUsers> implements Users {
 	
 	public SoapUsersClient( URI serverUri ) {
 		super( serverUri, () -> {
-			QName QNAME = new QName(SoapUsers.NAMESPACE, SoapUsers.NAME);			
+			QName QNAME = new QName(SoapUsers.NAMESPACE, SoapUsers.NAME);	
+			HttpsURLConnection.setDefaultHostnameVerifier(new InsecureHostnameVerifier());		
 			Service service = Service.create(Url.from(serverUri + WSDL), QNAME);
 			return service.getPort(tp2.api.service.soap.SoapUsers.class);
 		} );

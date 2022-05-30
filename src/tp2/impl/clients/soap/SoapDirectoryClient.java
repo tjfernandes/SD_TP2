@@ -3,6 +3,7 @@ package tp2.impl.clients.soap;
 import java.net.URI;
 import java.util.List;
 
+import javax.net.ssl.HttpsURLConnection;
 import javax.xml.namespace.QName;
 
 import jakarta.xml.ws.Service;
@@ -10,16 +11,20 @@ import tp2.api.FileInfo;
 import tp2.api.service.java.Directory;
 import tp2.api.service.java.Result;
 import tp2.api.service.soap.SoapDirectory;
+import tp2.tls.InsecureHostnameVerifier;
 import util.Url;
 
 public class SoapDirectoryClient extends SoapClient<SoapDirectory> implements Directory {
 
 	public SoapDirectoryClient(URI serverURI) {
+		
 		super(serverURI, () -> {
 			QName QNAME = new QName(SoapDirectory.NAMESPACE, SoapDirectory.NAME);
+			HttpsURLConnection.setDefaultHostnameVerifier(new InsecureHostnameVerifier());
 			Service service = Service.create(Url.from(serverURI + WSDL), QNAME);
 			return service.getPort(tp2.api.service.soap.SoapDirectory.class);			
 		});
+		
 	}
 
 	@Override
