@@ -10,6 +10,7 @@ import tp2.impl.discovery.Discovery;
 import tp2.impl.servers.common.AbstractServer;
 import util.IP;
 
+import com.dropbox.core.v2.team.GetDevicesReport;
 import com.sun.net.httpserver.HttpsConfigurator;
 import com.sun.net.httpserver.HttpsServer;
 
@@ -19,13 +20,11 @@ public class AbstractSoapServer extends AbstractServer{
 	private static String SERVER_BASE_URI = "https://%s:%s/soap";
 
 	final Object implementor;
-	final Object soapServer;
 	
-	protected AbstractSoapServer( boolean enableSoapDebug, Logger log, String service, int port, Object implementor, Object soapServer) {
+	protected AbstractSoapServer( boolean enableSoapDebug, Logger log, String service, int port, Object implementor) {
 		super( log, service, port);
 		this.implementor = implementor;
-		this.soapServer = soapServer;
-		
+
 		if(enableSoapDebug ) {
 			System.setProperty("com.sun.xml.ws.transport.http.client.HttpTransportPipe.dump", "true");
 			System.setProperty("com.sun.xml.internal.ws.transport.http.client.HttpTransportPipe.dump", "true");
@@ -45,8 +44,10 @@ public class AbstractSoapServer extends AbstractServer{
 			server.setExecutor(Executors.newCachedThreadPool());
 			server.setHttpsConfigurator(new HttpsConfigurator(SSLContext.getDefault()));
 
-			var endpoint = Endpoint.create(soapServer);
+			var endpoint = Endpoint.create(implementor);
 			endpoint.publish(server.createContext("/soap"));
+
+			server.start();
 
 			Discovery.getInstance().announce(service, serverURI);
 

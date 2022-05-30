@@ -15,7 +15,7 @@ public class UsersSoapServer extends AbstractSoapServer{
 	private static Logger Log = Logger.getLogger(UsersSoapServer.class.getName());
 
 	UsersSoapServer() {
-		super(false, Log, Users.SERVICE_NAME, PORT, new SoapUsersWebService(), new UsersSoapServer());
+		super(false, Log, Users.SERVICE_NAME, PORT, new SoapUsersWebService());
 	}
 	
 	public static void main(String[] args) throws Exception {
