@@ -34,5 +34,5 @@ public class DirectoryRestServer extends AbstractRestServer {
 		Token.set( args.length > 0 ? args[0] : "");
 
 		new DirectoryRestServer().start();
-	}	
+	}
 }

@@ -27,6 +27,7 @@ public class RestDirectoryClient extends RestClient implements Directory {
 				.path(filename)
 				.queryParam(RestDirectory.PASSWORD, password)
 				.request()
+				.header(RestDirectory.HEADER_VERSION, 1)
 				.accept(MediaType.APPLICATION_JSON)
 				.post(Entity.entity( data, MediaType.APPLICATION_OCTET_STREAM));
 		return super.toJavaResult(r, new GenericType<FileInfo>() {});
@@ -38,6 +39,7 @@ public class RestDirectoryClient extends RestClient implements Directory {
 				.path(filename)
 				.queryParam(RestDirectory.PASSWORD, password)
 				.request()
+				.header(RestDirectory.HEADER_VERSION, 1)
 				.delete();
 		return super.toJavaResult(r);
 	}
@@ -50,6 +52,7 @@ public class RestDirectoryClient extends RestClient implements Directory {
 				.path( userIdShare)
 				.queryParam(RestDirectory.PASSWORD, password)
 				.request()
+				.header(RestDirectory.HEADER_VERSION, 1)
 				.post(Entity.json(null));		
 		return super.toJavaResult(r);
 	}
@@ -62,6 +65,7 @@ public class RestDirectoryClient extends RestClient implements Directory {
 				.path( userIdShare)
 				.queryParam(RestDirectory.PASSWORD, password)
 				.request()
+				.header(RestDirectory.HEADER_VERSION, 1)
 				.delete();
 		return super.toJavaResult(r);
 	}
@@ -73,6 +77,7 @@ public class RestDirectoryClient extends RestClient implements Directory {
 				.queryParam(RestDirectory.ACC_USER_ID, accUserId)
 				.queryParam(RestDirectory.PASSWORD, password)
 				.request()
+				.header(RestDirectory.HEADER_VERSION, 1)
 				.accept(MediaType.APPLICATION_OCTET_STREAM)
 				.get();
 		return super.toJavaResult(r, new GenericType<byte[]>() {});
@@ -83,6 +88,7 @@ public class RestDirectoryClient extends RestClient implements Directory {
 		Response r = target.path(userId)
 				.queryParam(RestDirectory.PASSWORD, password)
 				.request()
+				.header(RestDirectory.HEADER_VERSION, 1)
 				.accept(MediaType.APPLICATION_JSON)
 				.get();
 		return super.toJavaResult(r, new GenericType<List<FileInfo>>() {});
@@ -94,6 +100,7 @@ public class RestDirectoryClient extends RestClient implements Directory {
 				.queryParam(RestDirectory.PASSWORD, password)
 				.queryParam(RestDirectory.TOKEN, token)
 				.request()
+				.header(RestDirectory.HEADER_VERSION, 1)
 				.delete();
 		return super.toJavaResult(r);
 	}
