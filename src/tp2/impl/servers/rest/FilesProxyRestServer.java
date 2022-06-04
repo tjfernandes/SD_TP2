@@ -12,8 +12,12 @@ import util.Token;
 
 public class FilesProxyRestServer extends AbstractRestServer {
     public static final int PORT = 6785;
+
+	public static String apiKey;
+	public static String apiSecret;
+	public static String accessTokenStr;
 	
-	private static Logger Log = Logger.getLogger(FilesRestServer.class.getName());
+	private static Logger Log = Logger.getLogger(FilesProxyRestServer.class.getName());
 
 	
 	FilesProxyRestServer() {
@@ -22,7 +26,7 @@ public class FilesProxyRestServer extends AbstractRestServer {
 	
 	@Override
 	void registerResources(ResourceConfig config) {
-		config.register( new FilesResources(true) ); 
+		config.register( new FilesResources(apiKey, apiSecret, accessTokenStr) ); 
 		config.register( GenericExceptionMapper.class );
 //		config.register( CustomLoggingFilter.class);
 	}
@@ -33,6 +37,12 @@ public class FilesProxyRestServer extends AbstractRestServer {
 		
 		Token.set( args.length == 0 ? "" : args[0] );
 
-		new FilesRestServer().start();
+		if (args.length > 1) {
+			apiKey = args[2];
+			apiSecret = args[3];
+			accessTokenStr = args[4];
+		}
+
+		new FilesProxyRestServer().start();
 	}	
 }

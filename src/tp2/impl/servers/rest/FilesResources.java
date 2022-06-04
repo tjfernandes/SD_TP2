@@ -14,11 +14,12 @@ public class FilesResources extends RestResource implements RestFiles {
 
 	final Files impl;
 
-	public FilesResources(boolean isProxy) {
-		if (isProxy)
-			impl = new DropboxFiles();
-		else
-			impl = new JavaFiles();
+	public FilesResources() {
+		impl = new JavaFiles();
+	}
+
+	public FilesResources(String apiKey, String apiSecret, String accessTokenStr) {
+		impl = new DropboxFiles(apiKey, apiSecret, accessTokenStr);
 	}
 
 	@Override

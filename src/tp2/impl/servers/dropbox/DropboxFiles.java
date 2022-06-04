@@ -35,10 +35,6 @@ public class DropboxFiles implements Files {
     static final String DELIMITER = "$$$";
 	private static final String ROOT = "/tmp/";
 
-	private static final String apiKey = "47oz8vghuy85fo1";
-	private static final String apiSecret = "3ofuvr93vzhuta4";
-	private static final String accessTokenStr = "sl.BI6KGqiuCkEtdwdGjtLOQ4XJf00IyvoJ92qHC-qzD3j1ZjbygC03044qdiY3SX2VBknAghA1gqqjmMo8JUihyqk-1-X64bzJWqmHvY2G_bBoUPZo0rbYL6_4hlPUuOHrsaEKmQY";
-
 	private static final String DROPBOX_API_ARG = "Dropbox-API-Arg";
 
 	private static final String UPLOAD_FILE_URL = "https://content.dropboxapi.com/2/files/upload";
@@ -54,7 +50,7 @@ public class DropboxFiles implements Files {
     private final OAuth20Service service;
     private final OAuth2AccessToken accessToken;
 	
-	public DropboxFiles() {
+	public DropboxFiles(String apiKey, String apiSecret, String accessTokenStr) {
 		new File( ROOT ).mkdirs();
 		json = new Gson();
 		accessToken = new OAuth2AccessToken(accessTokenStr);
