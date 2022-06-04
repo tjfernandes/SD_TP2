@@ -10,19 +10,19 @@ import tp2.impl.servers.rest.util.GenericExceptionMapper;
 import util.Debug;
 import util.Token;
 
-public class FilesRestServer extends AbstractRestServer {
-	public static final int PORT = 5678;
+public class FilesProxyRestServer extends AbstractRestServer {
+    public static final int PORT = 6785;
 	
 	private static Logger Log = Logger.getLogger(FilesRestServer.class.getName());
 
 	
-	FilesRestServer() {
+	FilesProxyRestServer() {
 		super(Log, Files.SERVICE_NAME, PORT);
 	}
 	
 	@Override
 	void registerResources(ResourceConfig config) {
-		config.register( new FilesResources(false) ); 
+		config.register( new FilesResources(true) ); 
 		config.register( GenericExceptionMapper.class );
 //		config.register( CustomLoggingFilter.class);
 	}

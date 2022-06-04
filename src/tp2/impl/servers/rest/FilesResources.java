@@ -6,6 +6,7 @@ import jakarta.inject.Singleton;
 import tp2.api.service.java.Files;
 import tp2.api.service.rest.RestFiles;
 import tp2.impl.servers.common.JavaFiles;
+import tp2.impl.servers.dropbox.DropboxFiles;
 
 @Singleton
 public class FilesResources extends RestResource implements RestFiles {
@@ -13,8 +14,11 @@ public class FilesResources extends RestResource implements RestFiles {
 
 	final Files impl;
 
-	public FilesResources() {
-		impl = new JavaFiles();
+	public FilesResources(boolean isProxy) {
+		if (isProxy)
+			impl = new DropboxFiles();
+		else
+			impl = new JavaFiles();
 	}
 
 	@Override
