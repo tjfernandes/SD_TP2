@@ -34,12 +34,21 @@ import tp2.api.User;
 import tp2.api.service.java.Directory;
 import tp2.api.service.java.Result;
 import tp2.api.service.java.Result.ErrorCode;
+import tp2.impl.kafka.KafkaSubscriber;
 import util.Token;
 
 public class JavaDirectory implements Directory {
 
 	static final long USER_CACHE_EXPIRATION = 3000;
 
+	final KafkaSubscriber subscriber;
+
+	private static final String FROM_BEGINNING = "earliest";
+
+	public JavaDirectory() {
+		subscriber = KafkaSubscriber.createSubscriber(JavaUsers.KAFKA_BROKERS, List.of(JavaUsers.TOPIC), FROM_BEGINNING);
+		subscriber.start(false, (r) -> {if (r.topic().equals("deleteUser")) deleteUserFiles(r.value());});
+	}
 
 	final LoadingCache<UserInfo, Result<User>> users = CacheBuilder.newBuilder()
 			.expireAfterWrite( Duration.ofMillis(USER_CACHE_EXPIRATION))
@@ -275,6 +284,18 @@ public class JavaDirectory implements Directory {
 			return fileCounts.computeIfAbsent(uri,  FileCounts::new);
 		else
 			return fileCounts.getOrDefault( uri, new FileCounts(uri) );
+	}
+
+	private Result<Void> deleteUserFiles(String userId) {
+		users.invalidate(userId);
+		var fileIds = userFiles.remove(userId);
+		if (fileIds != null)
+			for (var id : fileIds.owned()) {
+				var file = files.remove(id);
+				removeSharesOfFile(file);
+				getFileCounts(file.uri(), false).numFiles().decrementAndGet();
+			}
+		return ok();
 	}
 	
 	

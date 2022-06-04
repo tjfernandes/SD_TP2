@@ -18,12 +18,23 @@ import java.util.concurrent.Executors;
 import tp2.api.User;
 import tp2.api.service.java.Result;
 import tp2.api.service.java.Users;
+import tp2.impl.kafka.KafkaPublisher;
 import util.Token;
 
 public class JavaUsers implements Users {
 	final protected Map<String, User> users = new ConcurrentHashMap<>();
 	final ExecutorService executor = Executors.newCachedThreadPool();
 	
+	 final KafkaPublisher publisher;
+
+	 static final String TOPIC = "deleteUser";
+
+	 static final String KAFKA_BROKERS = "kafka:9092";
+
+	public JavaUsers() {
+		publisher = KafkaPublisher.createPublisher(KAFKA_BROKERS);
+	}
+
 	@Override
 	public Result<String> createUser(User user) {
 		if( badUser(user ))
@@ -83,9 +94,10 @@ public class JavaUsers implements Users {
 		else {
 			users.remove(userId);
 			executor.execute(()->{
-				DirectoryClients.get().deleteUserFiles(userId, password, Token.get());
+				/*DirectoryClients.get().deleteUserFiles(userId, password, Token.get());
 				for( var uri : FilesClients.all())
-					FilesClients.get(uri).deleteUserFiles( userId, password);
+					FilesClients.get(uri).deleteUserFiles( userId, password);*/
+					publisher.publish(TOPIC, userId);
 			});
 			return ok(user);
 		}
