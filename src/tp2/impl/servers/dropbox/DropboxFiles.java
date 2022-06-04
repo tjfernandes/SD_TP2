@@ -33,7 +33,6 @@ import com.dropbox.core.v2.files.WriteMode;
 public class DropboxFiles implements Files {
 
     static final String DELIMITER = "$$$";
-	private static final String ROOT = "/tmp/";
 
 	private static final String DROPBOX_API_ARG = "Dropbox-API-Arg";
 
@@ -46,15 +45,43 @@ public class DropboxFiles implements Files {
 	private static final String OCTET_STREAM_CONTENT_TYPE = "application/octet-stream";
 	private static final String JSON_CONTENT_TYPE = "application/json; charset=utf-8";
 
+	private static final String MAIN_DIR_PATH = "/Users";
+
 	private final Gson json;
     private final OAuth20Service service;
     private final OAuth2AccessToken accessToken;
 	
-	public DropboxFiles(String apiKey, String apiSecret, String accessTokenStr) {
-		new File( ROOT ).mkdirs();
+	public DropboxFiles(String apiKey, String apiSecret, String accessTokenStr, boolean cleanDropbox) {
 		json = new Gson();
 		accessToken = new OAuth2AccessToken(accessTokenStr);
 		service = new ServiceBuilder(apiKey).apiSecret(apiSecret).build(DropboxApi20.INSTANCE);
+		if (cleanDropbox) {
+			deleteDir();
+		}
+	}
+
+	private Result<Void> deleteDir() {
+		var deleteDir = new OAuthRequest(Verb.POST, DELETE_FILE_URL);
+
+		deleteDir.addHeader(CONTENT_TYPE_HDR, JSON_CONTENT_TYPE);
+
+		deleteDir.setPayload(json.toJson(new DeleteArg(MAIN_DIR_PATH)));
+
+		service.signRequest(accessToken, deleteDir);
+
+		Response r;
+		try {
+			r = service.execute(deleteDir);
+			if (r.getCode() != Status.OK.getStatusCode()) {
+				System.out.println(String.format("\n\n\n\n\nFailed to delete Users folder: Status: %d, \nReason: %s\n", r.getCode(), r.getBody()));
+				if (r.getCode() == Status.NOT_FOUND.getStatusCode())
+					return error(NOT_FOUND);
+			}
+		} catch (InterruptedException | ExecutionException | IOException e) {
+			e.printStackTrace();
+		}
+
+		return ok();
 	}
 
 	@Override
@@ -65,7 +92,7 @@ public class DropboxFiles implements Files {
 		var downloadFile = new OAuthRequest(Verb.POST, DOWNLOAD_FILE_URL);
 
 		downloadFile.addHeader(CONTENT_TYPE_HDR, OCTET_STREAM_CONTENT_TYPE);
-		downloadFile.addHeader(DROPBOX_API_ARG, json.toJson(new DownloadFileArgs("/"+fileId)));
+		downloadFile.addHeader(DROPBOX_API_ARG, json.toJson(new DownloadFileArgs(MAIN_DIR_PATH+"/"+fileId)));
 
 		service.signRequest(accessToken, downloadFile);
 
@@ -95,7 +122,7 @@ public class DropboxFiles implements Files {
 
 		deleteFile.addHeader(CONTENT_TYPE_HDR, JSON_CONTENT_TYPE);
 
-		deleteFile.setPayload(json.toJson(new DeleteArg("/"+fileId)));
+		deleteFile.setPayload(json.toJson(new DeleteArg(MAIN_DIR_PATH+"/"+fileId)));
 
 		service.signRequest(accessToken, deleteFile);
 
@@ -121,7 +148,7 @@ public class DropboxFiles implements Files {
 		var uploadFile = new OAuthRequest(Verb.POST, UPLOAD_FILE_URL);
 
 		uploadFile.addHeader(CONTENT_TYPE_HDR, OCTET_STREAM_CONTENT_TYPE);
-		uploadFile.addHeader(DROPBOX_API_ARG, json.toJson(new UploadFileArgs("/"+fileId, WriteMode.OVERWRITE.tag().toString().toLowerCase())));
+		uploadFile.addHeader(DROPBOX_API_ARG, json.toJson(new UploadArgs(MAIN_DIR_PATH+"/"+fileId, WriteMode.OVERWRITE.tag().toString().toLowerCase())));
 
 		uploadFile.setPayload(data);
 
@@ -147,7 +174,7 @@ public class DropboxFiles implements Files {
 
 		deleteFolder.addHeader(CONTENT_TYPE_HDR, JSON_CONTENT_TYPE);
 
-		deleteFolder.setPayload(json.toJson(new DeleteArg("/"+userId)));
+		deleteFolder.setPayload(json.toJson(new DeleteArg(MAIN_DIR_PATH+"/"+userId)));
 
 		service.signRequest(accessToken, deleteFolder);
 

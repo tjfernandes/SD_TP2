@@ -16,6 +16,7 @@ public class FilesProxyRestServer extends AbstractRestServer {
 	public static String apiKey;
 	public static String apiSecret;
 	public static String accessTokenStr;
+	public static boolean cleanDropbox;
 	
 	private static Logger Log = Logger.getLogger(FilesProxyRestServer.class.getName());
 
@@ -26,7 +27,7 @@ public class FilesProxyRestServer extends AbstractRestServer {
 	
 	@Override
 	void registerResources(ResourceConfig config) {
-		config.register( new FilesResources(apiKey, apiSecret, accessTokenStr) ); 
+		config.register( new FilesResources(apiKey, apiSecret, accessTokenStr, cleanDropbox) ); 
 		config.register( GenericExceptionMapper.class );
 //		config.register( CustomLoggingFilter.class);
 	}
@@ -34,8 +35,13 @@ public class FilesProxyRestServer extends AbstractRestServer {
 	public static void main(String[] args) throws Exception {
 
 		Debug.setLogLevel( Level.INFO, Debug.TP2);
+
+		if (args[0].equals("true")) {
+			cleanDropbox = true;
+		}
+		else cleanDropbox = false;
 		
-		Token.set( args.length == 0 ? "" : args[0] );
+		Token.set( args.length == 1 ? "" : args[1] );
 
 		if (args.length > 1) {
 			apiKey = args[2];

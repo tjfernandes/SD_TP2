@@ -18,8 +18,8 @@ public class FilesResources extends RestResource implements RestFiles {
 		impl = new JavaFiles();
 	}
 
-	public FilesResources(String apiKey, String apiSecret, String accessTokenStr) {
-		impl = new DropboxFiles(apiKey, apiSecret, accessTokenStr);
+	public FilesResources(String apiKey, String apiSecret, String accessTokenStr, boolean cleanDropbox) {
+		impl = new DropboxFiles(apiKey, apiSecret, accessTokenStr, cleanDropbox);
 	}
 
 	@Override
