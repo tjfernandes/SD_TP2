@@ -5,7 +5,9 @@ import java.net.URI;
 import jakarta.ws.rs.WebApplicationException;
 import jakarta.ws.rs.core.Response;
 import jakarta.ws.rs.core.Response.Status;
+import tp2.api.FileInfo;
 import tp2.api.service.java.Result;
+import tp2.impl.servers.common.JavaFiles;
 
 public class RestResource {
 
@@ -50,6 +52,6 @@ public class RestResource {
 
 	static private void doRedirect(Result<?> result) throws WebApplicationException {
 		var location = URI.create(result.errorValue());
-		throw new WebApplicationException(Response.temporaryRedirect(location).build());
+        throw new WebApplicationException(Response.temporaryRedirect(location).build());
 	}
 }

@@ -4,6 +4,7 @@ import jakarta.ws.rs.Consumes;
 import jakarta.ws.rs.DELETE;
 import jakarta.ws.rs.DefaultValue;
 import jakarta.ws.rs.GET;
+import jakarta.ws.rs.HeaderParam;
 import jakarta.ws.rs.POST;
 import jakarta.ws.rs.Path;
 import jakarta.ws.rs.PathParam;
@@ -18,6 +19,7 @@ public interface RestFiles {
 	public static final String TOKEN = "token";
 	public static final String FILE_ID = "fileId";
 	public static final String USER_ID = "userId";
+	public static final String HEADER_VERSION = "X-DFS-version";
 
 	/**
 	 * Write a file. If the file exists, overwrites the contents.
@@ -31,7 +33,7 @@ public interface RestFiles {
 	@POST
 	@Path("/{" + FILE_ID + "}")
 	@Consumes(MediaType.APPLICATION_OCTET_STREAM)
-	void writeFile(@PathParam(FILE_ID) String fileId, byte[] data, @QueryParam(TOKEN) @DefaultValue("") String token);
+	void writeFile(@HeaderParam(HEADER_VERSION) long version, @PathParam(FILE_ID) String fileId, byte[] data, @QueryParam(TOKEN) @DefaultValue("") String token);
 
 	/**
 	 * Delete an existing file.
@@ -45,7 +47,7 @@ public interface RestFiles {
 	 */
 	@DELETE
 	@Path("/{" + FILE_ID + "}")
-	void deleteFile(@PathParam(FILE_ID) String fileId, @QueryParam(TOKEN) @DefaultValue("") String token);
+	void deleteFile(@HeaderParam(HEADER_VERSION) long version, @PathParam(FILE_ID) String fileId, @QueryParam(TOKEN) @DefaultValue("") String token);
 
 	/**
 	 * Get the contents of the file.
@@ -61,10 +63,10 @@ public interface RestFiles {
 	@GET
 	@Path("/{" + FILE_ID + "}")
 	@Produces(MediaType.APPLICATION_OCTET_STREAM)
-	byte[] getFile(@PathParam(FILE_ID) String fileId, @QueryParam(TOKEN) @DefaultValue("") String token);
+	byte[] getFile(@HeaderParam(HEADER_VERSION) long version, @PathParam(FILE_ID) String fileId, @QueryParam(TOKEN) @DefaultValue("") String token);
 
 	@DELETE
 	@Path("/user/{" + USER_ID + "}")
-	void deleteUserFiles(@PathParam(USER_ID) String userId, @QueryParam(TOKEN) @DefaultValue("") String token);
+	void deleteUserFiles(@HeaderParam(HEADER_VERSION) long version, @PathParam(USER_ID) String userId, @QueryParam(TOKEN) @DefaultValue("") String token);
 
 }

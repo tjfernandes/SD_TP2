@@ -19,7 +19,6 @@ import tp2.api.User;
 import tp2.api.service.java.Result;
 import tp2.api.service.java.Users;
 import tp2.impl.kafka.KafkaPublisher;
-import util.Token;
 
 public class JavaUsers implements Users {
 	final protected Map<String, User> users = new ConcurrentHashMap<>();

@@ -22,6 +22,8 @@ public class FileInfo {
 	 */
 	private Set<String> sharedWith;
 	
+	public static final String DELIMITER = "%%%";
+
 	public FileInfo() {
 		this.sharedWith = ConcurrentHashMap.newKeySet();
 	}
@@ -54,7 +56,14 @@ public class FileInfo {
 	}
 
 	public void setFileURL(String fileURL) {
-		this.fileURL = fileURL;
+		if (this.fileURL == null)
+			this.fileURL = fileURL;
+		else
+			this.fileURL += DELIMITER  + fileURL;
+	}
+
+	public void setFileURLNull() {
+		this.fileURL = null;
 	}
 
 	public Set<String> getSharedWith() {

@@ -29,6 +29,7 @@ import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
 
+import jakarta.ws.rs.DELETE;
 import tp2.api.FileInfo;
 import tp2.api.User;
 import tp2.api.service.java.Directory;
@@ -85,18 +86,25 @@ public class JavaDirectory implements Directory {
 			var fileId = fileId(filename, userId);
 			var file = files.get(fileId);
 			var info = file != null ? file.info() : new FileInfo();
+			int servFilesCount = 0;
+			URI firstURI = null;
 			for (var uri :  orderCandidateFileServers(file)) {
 				var result = FilesClients.get(uri).writeFile(fileId, data, Token.get());
 				if (result.isOK()) {
 					info.setOwner(userId);
 					info.setFilename(filename);
 					info.setFileURL(String.format("%s/files/%s", uri, fileId));
-					files.put(fileId, file = new ExtendedFileInfo(uri, fileId, info));
+					if(servFilesCount < 1)
+						firstURI = uri;
+					files.put(fileId, file = new ExtendedFileInfo(firstURI , fileId, info));
 					if( uf.owned().add(fileId))
 						getFileCounts(file.uri(), true).numFiles().incrementAndGet();
-					return ok(file.info());
+					servFilesCount++;
 				} else
 					Log.info(String.format("Files.writeFile(...) to %s failed with: %s \n", uri, result));
+			}
+			if(servFilesCount >= 1) {
+				return ok(file.info());
 			}
 			return error(BAD_REQUEST);
 		}
@@ -197,8 +205,15 @@ public class JavaDirectory implements Directory {
 
 		if (!file.info().hasAccess(accUserId))
 			return error(FORBIDDEN);
-		
-		return redirect( file.info().getFileURL() );
+		String[] url = file.info().getFileURL().split(FileInfo.DELIMITER, 2);
+		Result<byte[]> res = redirect(url[0]);
+		if (!res.isOK()) {
+			file.info().setFileURLNull();
+			file.info().setFileURL(url[1]);
+			file.info().setFileURL(url[0]);
+		}
+		return res;
+			
 	}
 
 	@Override
