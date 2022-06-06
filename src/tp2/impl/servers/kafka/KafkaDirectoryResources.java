@@ -30,7 +30,7 @@ public class KafkaDirectoryResources extends RestResource implements RestDirecto
         impl = new KafkaJavaDirectory();
         publisher = KafkaPublisher.createPublisher(KAFKA_BROKERS);
         subscriber = KafkaSubscriber.createSubscriber(KAFKA_BROKERS, List.of(Topics.DELETE_USER.getLabel(), Topics.WRITE_FILE.getLabel()), FROM_BEGINNING);
-		subscriber.start(false, (r) -> onReceive(r));
+		subscriber.start(false, this);
     }
 
     @Override
