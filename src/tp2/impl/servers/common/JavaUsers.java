@@ -6,8 +6,6 @@ import static tp2.api.service.java.Result.ErrorCode.BAD_REQUEST;
 import static tp2.api.service.java.Result.ErrorCode.CONFLICT;
 import static tp2.api.service.java.Result.ErrorCode.FORBIDDEN;
 import static tp2.api.service.java.Result.ErrorCode.NOT_FOUND;
-import static tp2.impl.clients.Clients.DirectoryClients;
-import static tp2.impl.clients.Clients.FilesClients;
 
 import java.util.List;
 import java.util.Map;
@@ -96,7 +94,7 @@ public class JavaUsers implements Users {
 				/*DirectoryClients.get().deleteUserFiles(userId, password, Token.get());
 				for( var uri : FilesClients.all())
 					FilesClients.get(uri).deleteUserFiles( userId, password);*/
-					publisher.publish(TOPIC, userId);
+				publisher.publish(TOPIC, userId);
 			});
 			return ok(user);
 		}

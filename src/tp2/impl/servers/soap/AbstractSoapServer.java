@@ -10,7 +10,6 @@ import tp2.impl.discovery.Discovery;
 import tp2.impl.servers.common.AbstractServer;
 import util.IP;
 
-import com.dropbox.core.v2.team.GetDevicesReport;
 import com.sun.net.httpserver.HttpsConfigurator;
 import com.sun.net.httpserver.HttpsServer;
 

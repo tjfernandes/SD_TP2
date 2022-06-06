@@ -6,7 +6,6 @@ import java.util.logging.Logger;
 import org.glassfish.jersey.server.ResourceConfig;
 
 import tp2.api.service.java.Users;
-import tp2.impl.kafka.KafkaPublisher;
 import tp2.impl.servers.rest.util.GenericExceptionMapper;
 import util.Debug;
 import util.Token;

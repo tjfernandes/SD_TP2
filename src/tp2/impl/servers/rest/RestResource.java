@@ -5,9 +5,7 @@ import java.net.URI;
 import jakarta.ws.rs.WebApplicationException;
 import jakarta.ws.rs.core.Response;
 import jakarta.ws.rs.core.Response.Status;
-import tp2.api.FileInfo;
 import tp2.api.service.java.Result;
-import tp2.impl.servers.common.JavaFiles;
 
 public class RestResource {
 

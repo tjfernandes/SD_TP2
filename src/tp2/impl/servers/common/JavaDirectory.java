@@ -29,26 +29,18 @@ import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
 
-import jakarta.ws.rs.DELETE;
 import tp2.api.FileInfo;
 import tp2.api.User;
 import tp2.api.service.java.Directory;
 import tp2.api.service.java.Result;
 import tp2.api.service.java.Result.ErrorCode;
-import tp2.impl.kafka.KafkaSubscriber;
 import util.Token;
 
 public class JavaDirectory implements Directory {
 
 	static final long USER_CACHE_EXPIRATION = 3000;
 
-	final KafkaSubscriber subscriber;
-
-	private static final String FROM_BEGINNING = "earliest";
-
 	public JavaDirectory() {
-		subscriber = KafkaSubscriber.createSubscriber(JavaUsers.KAFKA_BROKERS, List.of(JavaUsers.TOPIC), FROM_BEGINNING);
-		subscriber.start(false, (r) -> {if (r.topic().equals("deleteUser")) deleteUserFiles(r.value());});
 	}
 
 	final LoadingCache<UserInfo, Result<User>> users = CacheBuilder.newBuilder()
@@ -89,19 +81,21 @@ public class JavaDirectory implements Directory {
 			int servFilesCount = 0;
 			URI firstURI = null;
 			for (var uri :  orderCandidateFileServers(file)) {
-				var result = FilesClients.get(uri).writeFile(fileId, data, Token.get());
-				if (result.isOK()) {
-					info.setOwner(userId);
-					info.setFilename(filename);
-					info.setFileURL(String.format("%s/files/%s", uri, fileId));
-					if(servFilesCount < 1)
-						firstURI = uri;
-					files.put(fileId, file = new ExtendedFileInfo(firstURI , fileId, info));
-					if( uf.owned().add(fileId))
-						getFileCounts(file.uri(), true).numFiles().incrementAndGet();
-					servFilesCount++;
-				} else
-					Log.info(String.format("Files.writeFile(...) to %s failed with: %s \n", uri, result));
+				if (servFilesCount < 2) {
+					var result = FilesClients.get(uri).writeFile(fileId, data, Token.get());
+					if (result.isOK()) {
+						info.setOwner(userId);
+						info.setFilename(filename);
+						info.setFileURL(String.format("%s/files/%s", uri, fileId));
+						if(servFilesCount < 1)
+							firstURI = uri;
+						files.put(fileId, file = new ExtendedFileInfo(firstURI , fileId, info));
+						if( uf.owned().add(fileId))
+							getFileCounts(file.uri(), true).numFiles().incrementAndGet();
+						servFilesCount++;
+					} else
+						Log.info(String.format("Files.writeFile(...) to %s failed with: %s \n", uri, result));
+				}
 			}
 			if(servFilesCount >= 1) {
 				return ok(file.info());
@@ -301,7 +295,7 @@ public class JavaDirectory implements Directory {
 			return fileCounts.getOrDefault( uri, new FileCounts(uri) );
 	}
 
-	private Result<Void> deleteUserFiles(String userId) {
+	public Result<Void> deleteUserFiles(String userId) {
 		users.invalidate(userId);
 		var fileIds = userFiles.remove(userId);
 		if (fileIds != null)
@@ -336,4 +330,5 @@ public class JavaDirectory implements Directory {
 	
 	static record UserInfo(String userId, String password) {		
 	}
+
 }
