@@ -1,9 +1,11 @@
 package tp2.impl.servers.kafka;
 
 import java.util.List;
+import java.util.logging.Logger;
 
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 
+import tp2.impl.kafka.sync.SyncPoint;
 import tp2.api.FileInfo;
 import tp2.api.service.java.Result;
 import tp2.api.service.rest.RestDirectory;
@@ -16,9 +18,13 @@ import tp2.impl.servers.rest.RestResource;
 
 public class KafkaDirectoryResources extends RestResource implements RestDirectory, RecordProcessor {
 
+    private static Logger Log = Logger.getLogger(KafkaDirectoryResources.class.getName());
+
     final KafkaSubscriber subscriber;
 
     final KafkaPublisher publisher;
+
+    final SyncPoint<String> sync;
 
 	private static final String FROM_BEGINNING = "earliest";
 
@@ -28,9 +34,11 @@ public class KafkaDirectoryResources extends RestResource implements RestDirecto
 
     public KafkaDirectoryResources() {
         impl = new KafkaJavaDirectory();
+        Log.info("\n\n\n\n\n\nENTROU construtor\n\n\n\n\n\n");
         publisher = KafkaPublisher.createPublisher(KAFKA_BROKERS);
         subscriber = KafkaSubscriber.createSubscriber(KAFKA_BROKERS, List.of(Topics.DELETE_USER.getLabel(), Topics.WRITE_FILE.getLabel()), FROM_BEGINNING);
 		subscriber.start(false, this);
+        sync = new SyncPoint<>();
     }
 
     @Override
@@ -40,7 +48,7 @@ public class KafkaDirectoryResources extends RestResource implements RestDirecto
 				impl.deleteUserFiles(r.value());
                 break;
             case WRITE_FILE:
-                impl.writeFile(r.value());
+                impl.writeFile(r.offset(), r.value());
                 break;
 		}
 
@@ -49,9 +57,11 @@ public class KafkaDirectoryResources extends RestResource implements RestDirecto
     @Override
     public FileInfo writeFile(long version, String filename, byte[] data, String userId, String password) {
         Result<FileInfo> res =  impl.writeFile(filename, data, userId, password);
-        if(res.isOK())
-            publisher.publish(Topics.WRITE_FILE.getLabel(), JavaDirectory.fileId(filename, userId));
-		return null;
+        if(res.isOK()) {
+            sync.waitForResult(publisher.publish(Topics.WRITE_FILE.getLabel(), JavaDirectory.fileId(filename, userId)));
+        }
+            
+		return super.resultOrThrow(res);
     }
 
     @Override
@@ -62,7 +72,6 @@ public class KafkaDirectoryResources extends RestResource implements RestDirecto
 
     @Override
     public void shareFile(long version, String filename, String userId, String userIdShare, String password) {
-        // TODO Auto-generated method stub
         
     }
 
@@ -75,6 +84,7 @@ public class KafkaDirectoryResources extends RestResource implements RestDirecto
     @Override
     public byte[] getFile(long version, String filename, String userId, String accUserId, String password) {
         // TODO Auto-generated method stub
+        Log.info("\n\n\n\n\n\nENTROU getFile()\n\n\n\n\n\n");
         return null;
     }
 

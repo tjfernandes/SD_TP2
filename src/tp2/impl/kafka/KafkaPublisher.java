@@ -23,7 +23,7 @@ public class KafkaPublisher {
 		props.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, StringSerializer.class.getName());
 
 		return new KafkaPublisher(new KafkaProducer<String, String>(props));
-	}
+	}	
 	
 	private final KafkaProducer<String, String> producer;
 

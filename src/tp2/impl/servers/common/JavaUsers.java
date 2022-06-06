@@ -24,6 +24,7 @@ public class JavaUsers implements Users {
 	
 	 final KafkaPublisher publisher;
 
+
 	 static final String TOPIC = "deleteUser";
 
 	 static final String KAFKA_BROKERS = "kafka:9092";
