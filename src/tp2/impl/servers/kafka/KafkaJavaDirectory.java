@@ -14,11 +14,9 @@ public class KafkaJavaDirectory extends JavaDirectory {
         sync = new SyncPoint<>();
     }
 
-    public Result<FileInfo> writeFile(long version, String value) {
+    public Result<FileInfo> writeFile(String value) {
 
         System.out.println("\n\n\n\n\n\n"+value+"\n\n\n\n\n\n");
-
-        sync.setResult(version, value);
 
         return null;
     }

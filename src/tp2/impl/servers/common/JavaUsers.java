@@ -17,15 +17,13 @@ import tp2.api.User;
 import tp2.api.service.java.Result;
 import tp2.api.service.java.Users;
 import tp2.impl.kafka.KafkaPublisher;
+import tp2.impl.kafka.Topics;
 
 public class JavaUsers implements Users {
 	final protected Map<String, User> users = new ConcurrentHashMap<>();
 	final ExecutorService executor = Executors.newCachedThreadPool();
 	
 	 final KafkaPublisher publisher;
-
-
-	 static final String TOPIC = "deleteUser";
 
 	 static final String KAFKA_BROKERS = "kafka:9092";
 
@@ -95,7 +93,7 @@ public class JavaUsers implements Users {
 				/*DirectoryClients.get().deleteUserFiles(userId, password, Token.get());
 				for( var uri : FilesClients.all())
 					FilesClients.get(uri).deleteUserFiles( userId, password);*/
-				publisher.publish(TOPIC, userId);
+				publisher.publish(Topics.deleteUser.name(), userId);
 			});
 			return ok(user);
 		}

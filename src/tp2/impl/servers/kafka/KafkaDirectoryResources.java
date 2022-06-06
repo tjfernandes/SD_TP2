@@ -2,8 +2,10 @@ package tp2.impl.servers.kafka;
 
 import java.util.List;
 import java.util.logging.Logger;
+import java.util.stream.Collectors;
 
 import org.apache.kafka.clients.consumer.ConsumerRecord;
+import org.apache.kafka.common.internals.Topic;
 
 import tp2.impl.kafka.sync.SyncPoint;
 import tp2.api.FileInfo;
@@ -34,31 +36,33 @@ public class KafkaDirectoryResources extends RestResource implements RestDirecto
 
     public KafkaDirectoryResources() {
         impl = new KafkaJavaDirectory();
-        Log.info("\n\n\n\n\n\nENTROU construtor\n\n\n\n\n\n");
         publisher = KafkaPublisher.createPublisher(KAFKA_BROKERS);
-        subscriber = KafkaSubscriber.createSubscriber(KAFKA_BROKERS, List.of(Topics.DELETE_USER.getLabel(), Topics.WRITE_FILE.getLabel()), FROM_BEGINNING);
+        subscriber = KafkaSubscriber.createSubscriber(KAFKA_BROKERS, List.of(Topics.deleteUser.name(), Topics.writeFile.name()), FROM_BEGINNING);
 		subscriber.start(false, this);
         sync = new SyncPoint<>();
     }
 
     @Override
 	public void onReceive(ConsumerRecord<String, String> r) {
+        Log.info("\n\n\n\n\n\n"+Topics.valueOf(r.topic())+"\n\n\n\n\n\n");
+
 		switch(Topics.valueOf(r.topic())) {
-			case DELETE_USER:
+			case deleteUser:
 				impl.deleteUserFiles(r.value());
                 break;
-            case WRITE_FILE:
-                impl.writeFile(r.offset(), r.value());
+            case writeFile:
+                Log.info("\n\n\n\n\n\nENTROU writeFile case: \n\n\n\n\n\n");
+                impl.writeFile(r.value());
                 break;
 		}
-
+        sync.setResult(r.offset(), r.value());
 	}
 
     @Override
     public FileInfo writeFile(long version, String filename, byte[] data, String userId, String password) {
         Result<FileInfo> res =  impl.writeFile(filename, data, userId, password);
         if(res.isOK()) {
-            sync.waitForResult(publisher.publish(Topics.WRITE_FILE.getLabel(), JavaDirectory.fileId(filename, userId)));
+            sync.waitForResult(publisher.publish(Topics.writeFile.name(), JavaDirectory.fileId(filename, userId)));
         }
             
 		return super.resultOrThrow(res);

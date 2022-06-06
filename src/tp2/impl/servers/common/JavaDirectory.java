@@ -34,13 +34,22 @@ import tp2.api.User;
 import tp2.api.service.java.Directory;
 import tp2.api.service.java.Result;
 import tp2.api.service.java.Result.ErrorCode;
+import tp2.impl.kafka.KafkaSubscriber;
+import tp2.impl.kafka.Topics;
 import util.Token;
 
 public class JavaDirectory implements Directory {
 
+	final KafkaSubscriber subscriber;
+
 	static final long USER_CACHE_EXPIRATION = 3000;
 
+	private static final String FROM_BEGINNING = "earliest";
+	
 	public JavaDirectory() {
+		Log.info("\n\n\n\n\n\n\n\n"+Topics.valueOf(Topics.deleteUser.name()).toString()+"\n\n\n\n\n\n\n\n");
+		subscriber = KafkaSubscriber.createSubscriber(JavaUsers.KAFKA_BROKERS, List.of(Topics.deleteUser.name()), FROM_BEGINNING);
+		subscriber.start(false, (r) -> {if (r.topic().equals(Topics.deleteUser.name())) deleteUserFiles(r.value());});
 	}
 
 	final LoadingCache<UserInfo, Result<User>> users = CacheBuilder.newBuilder()
