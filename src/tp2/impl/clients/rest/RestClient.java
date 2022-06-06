@@ -57,8 +57,10 @@ abstract class RestClient extends RetryClient {
 	protected Result<Void> toJavaResult(Response r) {
 		try {
 			var status = r.getStatusInfo().toEnum();
-			if (status == Status.NO_CONTENT)
+			if (status == Status.NO_CONTENT) {
 				return ok();
+			}
+				
 			else
 				return error(getErrorCodeFrom(status));
 		} finally {

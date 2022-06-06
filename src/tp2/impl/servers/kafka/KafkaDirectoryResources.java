@@ -7,6 +7,7 @@ import java.util.stream.Collectors;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.common.internals.Topic;
 
+import jakarta.inject.Singleton;
 import tp2.impl.kafka.sync.SyncPoint;
 import tp2.api.FileInfo;
 import tp2.api.service.java.Result;
@@ -18,6 +19,7 @@ import tp2.impl.kafka.Topics;
 import tp2.impl.servers.common.JavaDirectory;
 import tp2.impl.servers.rest.RestResource;
 
+@Singleton
 public class KafkaDirectoryResources extends RestResource implements RestDirectory, RecordProcessor {
 
     private static Logger Log = Logger.getLogger(KafkaDirectoryResources.class.getName());
@@ -34,6 +36,8 @@ public class KafkaDirectoryResources extends RestResource implements RestDirecto
 
     final KafkaJavaDirectory impl;
 
+    static KafkaDirectoryResources instance;
+
     public KafkaDirectoryResources() {
         impl = new KafkaJavaDirectory();
         publisher = KafkaPublisher.createPublisher(KAFKA_BROKERS);
@@ -42,16 +46,20 @@ public class KafkaDirectoryResources extends RestResource implements RestDirecto
         sync = new SyncPoint<>();
     }
 
+    public static KafkaDirectoryResources getInstance() {
+        if (instance == null)
+            instance = new KafkaDirectoryResources();
+        return instance;
+    }
+
     @Override
 	public void onReceive(ConsumerRecord<String, String> r) {
-        Log.info("\n\n\n\n\n\n"+Topics.valueOf(r.topic())+"\n\n\n\n\n\n");
-
 		switch(Topics.valueOf(r.topic())) {
 			case deleteUser:
 				impl.deleteUserFiles(r.value());
                 break;
             case writeFile:
-                Log.info("\n\n\n\n\n\nENTROU writeFile case: \n\n\n\n\n\n");
+                System.out.println("\n\n\n\n\nFODA-SE\n\n\n\n\n");
                 impl.writeFile(r.value());
                 break;
 		}
@@ -88,7 +96,6 @@ public class KafkaDirectoryResources extends RestResource implements RestDirecto
     @Override
     public byte[] getFile(long version, String filename, String userId, String accUserId, String password) {
         // TODO Auto-generated method stub
-        Log.info("\n\n\n\n\n\nENTROU getFile()\n\n\n\n\n\n");
         return null;
     }
 

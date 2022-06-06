@@ -22,7 +22,7 @@ public class KafkaDirectoryRestServer extends AbstractRestServer {
 	
 	@Override
 	void registerResources(ResourceConfig config) {
-		config.register( KafkaDirectoryResources.class ); 
+		config.register( KafkaDirectoryResources.getInstance() ); 
 		config.register( GenericExceptionMapper.class );		
 //		config.register( CustomLoggingFilter.class);
 	}

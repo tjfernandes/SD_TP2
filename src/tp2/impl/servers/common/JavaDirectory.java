@@ -47,7 +47,6 @@ public class JavaDirectory implements Directory {
 	private static final String FROM_BEGINNING = "earliest";
 	
 	public JavaDirectory() {
-		Log.info("\n\n\n\n\n\n\n\n"+Topics.valueOf(Topics.deleteUser.name()).toString()+"\n\n\n\n\n\n\n\n");
 		subscriber = KafkaSubscriber.createSubscriber(JavaUsers.KAFKA_BROKERS, List.of(Topics.deleteUser.name()), FROM_BEGINNING);
 		subscriber.start(false, (r) -> {if (r.topic().equals(Topics.deleteUser.name())) deleteUserFiles(r.value());});
 	}
@@ -68,7 +67,7 @@ public class JavaDirectory implements Directory {
 	final static Logger Log = Logger.getLogger(JavaDirectory.class.getName());
 	final ExecutorService executor = Executors.newCachedThreadPool();
 
-	final Map<String, ExtendedFileInfo> files = new ConcurrentHashMap<>();
+	public final Map<String, ExtendedFileInfo> files = new ConcurrentHashMap<>();
 	final Map<String, UserFiles> userFiles = new ConcurrentHashMap<>();
 	final Map<URI, FileCounts> fileCounts = new ConcurrentHashMap<>();
 	
@@ -274,7 +273,7 @@ public class JavaDirectory implements Directory {
 	}
 
 
-	private Queue<URI> orderCandidateFileServers(ExtendedFileInfo file) {
+	protected Queue<URI> orderCandidateFileServers(ExtendedFileInfo file) {
 		int MAX_SIZE=3;
 		Queue<URI> result = new ArrayDeque<>();
 		
@@ -297,7 +296,7 @@ public class JavaDirectory implements Directory {
 		return result;
 	}
 	
-	private FileCounts getFileCounts( URI uri, boolean create ) {
+	protected FileCounts getFileCounts( URI uri, boolean create ) {
 		if( create )
 			return fileCounts.computeIfAbsent(uri,  FileCounts::new);
 		else
@@ -317,7 +316,7 @@ public class JavaDirectory implements Directory {
 	}
 	
 	
-	static record ExtendedFileInfo(URI uri, String fileId, FileInfo info) {
+	public static record ExtendedFileInfo(URI uri, String fileId, FileInfo info) {
 	}
 
 	static record UserFiles(Set<String> owned, Set<String> shared) {
@@ -327,7 +326,7 @@ public class JavaDirectory implements Directory {
 		}
 	}
 
-	static record FileCounts(URI uri, AtomicLong numFiles) {
+	public static record FileCounts(URI uri, AtomicLong numFiles) {
 		FileCounts( URI uri) {
 			this(uri, new AtomicLong(0L) );
 		}
