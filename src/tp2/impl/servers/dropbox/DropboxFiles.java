@@ -2,15 +2,10 @@ package tp2.impl.servers.dropbox;
 
 import static tp2.api.service.java.Result.error;
 import static tp2.api.service.java.Result.ok;
-import static tp2.api.service.java.Result.ErrorCode.INTERNAL_ERROR;
 import static tp2.api.service.java.Result.ErrorCode.NOT_FOUND;
 
-import java.io.File;
 import java.io.IOException;
-import java.nio.file.Path;
-import java.util.Comparator;
 import java.util.concurrent.ExecutionException;
-import java.util.logging.Logger;
 
 import com.dropbox.core.v2.files.DeleteArg;
 import org.pac4j.scribe.builder.api.DropboxApi20;
