@@ -93,7 +93,7 @@ public class JavaUsers implements Users {
 				/*DirectoryClients.get().deleteUserFiles(userId, password, Token.get());
 				for( var uri : FilesClients.all())
 					FilesClients.get(uri).deleteUserFiles( userId, password);*/
-				publisher.publish(Topics.deleteUser.name(), userId);
+				publisher.publish(Topics.DELETE_USER.name(), userId);
 			});
 			return ok(user);
 		}

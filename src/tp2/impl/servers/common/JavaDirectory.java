@@ -34,24 +34,16 @@ import tp2.api.User;
 import tp2.api.service.java.Directory;
 import tp2.api.service.java.Result;
 import tp2.api.service.java.Result.ErrorCode;
-import tp2.impl.kafka.KafkaSubscriber;
-import tp2.impl.kafka.Topics;
 import util.Token;
 
 public class JavaDirectory implements Directory {
 
-	final KafkaSubscriber subscriber;
-
 	static final long USER_CACHE_EXPIRATION = 3000;
-
-	private static final String FROM_BEGINNING = "earliest";
 	
 	public JavaDirectory() {
-		subscriber = KafkaSubscriber.createSubscriber(JavaUsers.KAFKA_BROKERS, List.of(Topics.deleteUser.name()), FROM_BEGINNING);
-		subscriber.start(false, (r) -> {if (r.topic().equals(Topics.deleteUser.name())) deleteUserFiles(r.value());});
 	}
 
-	final LoadingCache<UserInfo, Result<User>> users = CacheBuilder.newBuilder()
+	protected final LoadingCache<UserInfo, Result<User>> users = CacheBuilder.newBuilder()
 			.expireAfterWrite( Duration.ofMillis(USER_CACHE_EXPIRATION))
 			.build(new CacheLoader<>() {
 				@Override
@@ -68,7 +60,7 @@ public class JavaDirectory implements Directory {
 	final ExecutorService executor = Executors.newCachedThreadPool();
 
 	public final Map<String, ExtendedFileInfo> files = new ConcurrentHashMap<>();
-	final Map<String, UserFiles> userFiles = new ConcurrentHashMap<>();
+	protected final Map<String, UserFiles> userFiles = new ConcurrentHashMap<>();
 	final Map<URI, FileCounts> fileCounts = new ConcurrentHashMap<>();
 	
 	@Override
@@ -229,8 +221,11 @@ public class JavaDirectory implements Directory {
 
 		var uf = userFiles.getOrDefault(userId, new UserFiles());
 		synchronized (uf) {
+			Stream.concat(uf.owned().stream(), uf.shared().stream()).forEach((f) -> System.out.println(f));
 			var infos = Stream.concat(uf.owned().stream(), uf.shared().stream()).map(f -> files.get(f).info())
 					.collect(Collectors.toSet());
+
+			files.values().forEach((f) -> System.out.println("\n"+f.toString()+"\n"));
 
 			return ok(new ArrayList<>(infos));
 		}
@@ -240,11 +235,11 @@ public class JavaDirectory implements Directory {
 		return userId + JavaFiles.DELIMITER + filename;
 	}
 
-	private static boolean badParam(String str) {
+	protected static boolean badParam(String str) {
 		return str == null || str.length() == 0;
 	}
 
-	private Result<User> getUser(String userId, String password) {
+	protected Result<User> getUser(String userId, String password) {
 		try {
 			return users.get( new UserInfo( userId, password));
 		} catch( Exception x ) {
@@ -267,7 +262,7 @@ public class JavaDirectory implements Directory {
 		return ok();
 	}
 
-	private void removeSharesOfFile(ExtendedFileInfo file) {
+	protected void removeSharesOfFile(ExtendedFileInfo file) {
 		for (var userId : file.info().getSharedWith())
 			userFiles.getOrDefault(userId, new UserFiles()).shared().remove(file.fileId());
 	}
@@ -301,27 +296,14 @@ public class JavaDirectory implements Directory {
 			return fileCounts.computeIfAbsent(uri,  FileCounts::new);
 		else
 			return fileCounts.getOrDefault( uri, new FileCounts(uri) );
-	}
-
-	public Result<Void> deleteUserFiles(String userId) {
-		users.invalidate(userId);
-		var fileIds = userFiles.remove(userId);
-		if (fileIds != null)
-			for (var id : fileIds.owned()) {
-				var file = files.remove(id);
-				removeSharesOfFile(file);
-				getFileCounts(file.uri(), false).numFiles().decrementAndGet();
-			}
-		return ok();
-	}
-	
+	}	
 	
 	public static record ExtendedFileInfo(URI uri, String fileId, FileInfo info) {
 	}
 
-	static record UserFiles(Set<String> owned, Set<String> shared) {
+	public static record UserFiles(Set<String> owned, Set<String> shared) {
 
-		UserFiles() {
+		public UserFiles() {
 			this(ConcurrentHashMap.newKeySet(), ConcurrentHashMap.newKeySet());
 		}
 	}
