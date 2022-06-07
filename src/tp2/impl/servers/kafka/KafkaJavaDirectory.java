@@ -9,6 +9,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 import tp2.api.FileInfo;
 import tp2.api.service.java.Result;
+import tp2.api.service.rest.RestFiles;
 import tp2.impl.kafka.sync.SyncPoint;
 import tp2.impl.servers.common.JavaDirectory;
 import tp2.impl.servers.kafka.KafkaDirectoryResources.DeleteFileInfo;
@@ -44,7 +45,7 @@ public class KafkaJavaDirectory extends JavaDirectory {
         
         var fileId = fileId(info.getFilename(), info.getOwner());
 
-        var url = info.getFileURL().split("/files")[0];
+        var url = info.getFileURL().split(RestFiles.PATH)[0];
 
         var uf = userFiles.computeIfAbsent(info.getOwner(), (k) -> new UserFiles());
 
