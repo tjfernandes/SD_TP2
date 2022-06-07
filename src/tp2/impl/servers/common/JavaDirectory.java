@@ -57,7 +57,7 @@ public class JavaDirectory implements Directory {
 			});
 	
 	final static Logger Log = Logger.getLogger(JavaDirectory.class.getName());
-	final ExecutorService executor = Executors.newCachedThreadPool();
+	protected final ExecutorService executor = Executors.newCachedThreadPool();
 
 	public final Map<String, ExtendedFileInfo> files = new ConcurrentHashMap<>();
 	protected final Map<String, UserFiles> userFiles = new ConcurrentHashMap<>();
@@ -80,6 +80,7 @@ public class JavaDirectory implements Directory {
 			var info = file != null ? file.info() : new FileInfo();
 			int servFilesCount = 0;
 			URI firstURI = null;
+			System.out.println("\n\n\n\n"+info.getFileURL()+"\n\n\n\n");
 			for (var uri :  orderCandidateFileServers(file)) {
 				if (servFilesCount < 2) {
 					var result = FilesClients.get(uri).writeFile(fileId, data, Token.get());
@@ -221,11 +222,8 @@ public class JavaDirectory implements Directory {
 
 		var uf = userFiles.getOrDefault(userId, new UserFiles());
 		synchronized (uf) {
-			Stream.concat(uf.owned().stream(), uf.shared().stream()).forEach((f) -> System.out.println(f));
 			var infos = Stream.concat(uf.owned().stream(), uf.shared().stream()).map(f -> files.get(f).info())
 					.collect(Collectors.toSet());
-
-			files.values().forEach((f) -> System.out.println("\n"+f.toString()+"\n"));
 
 			return ok(new ArrayList<>(infos));
 		}

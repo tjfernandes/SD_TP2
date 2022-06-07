@@ -9,18 +9,59 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Comparator;
+import java.util.List;
+
+import org.apache.kafka.clients.consumer.ConsumerRecord;
+
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 import tp2.api.service.java.Files;
 import tp2.api.service.java.Result;
+import tp2.impl.kafka.KafkaSubscriber;
+import tp2.impl.kafka.RecordProcessor;
+import tp2.impl.kafka.Topics;
+import tp2.impl.servers.kafka.KafkaDirectoryResources.DeleteFileInfo;
 import util.IO;
 
-public class JavaFiles implements Files {
+public class JavaFiles implements Files, RecordProcessor {
 
 	public static final String DELIMITER = "$$$";
 	private static final String ROOT = "/tmp/";
+
+	static final String FROM_BEGINNING = "earliest";
+	static final String KAFKA_BROKERS = "kafka:9092";
+	final KafkaSubscriber receiver;
 	
+	ObjectMapper mapper;
+
 	public JavaFiles() {
 		new File( ROOT ).mkdirs();
+		receiver = 	KafkaSubscriber.createSubscriber(KAFKA_BROKERS, List.of(Topics.DELETE_FILE_GARBAGE.name(), Topics.DELETE_USER.name()), FROM_BEGINNING);
+		receiver.start(false, this);
+		this.mapper = new ObjectMapper();
+	}
+
+	@Override
+	public void onReceive(ConsumerRecord<String, String> r) {
+		DeleteFileInfo info = null;
+		try {
+			info = mapper.readValue(r.value(), DeleteFileInfo.class);
+		} catch (JsonProcessingException e) {
+			e.printStackTrace();
+		}
+
+		switch(Topics.valueOf(r.topic())) {
+			case DELETE_FILE_GARBAGE:
+				deleteFile(JavaDirectory.fileId(info.filename(), info.userId()), "mysecret");
+				break;
+			case DELETE_USER:
+				deleteUserFiles(info.userId(), "mysecret");
+				break;
+			default:
+				break;
+		}
+		
 	}
 
 	@Override
@@ -64,4 +105,8 @@ public class JavaFiles implements Files {
 	public static String fileId(String filename, String userId) {
 		return userId + JavaFiles.DELIMITER + filename;
 	}
+
+
+
+	
 }

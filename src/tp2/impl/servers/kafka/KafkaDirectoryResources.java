@@ -60,6 +60,7 @@ public class KafkaDirectoryResources extends RestResource implements RestDirecto
 
     @Override
 	public void onReceive(ConsumerRecord<String, String> r) {
+
 		switch(Topics.valueOf(r.topic())) {
 			case DELETE_USER:
 				impl.deleteUserFiles(r.value());
@@ -71,7 +72,13 @@ public class KafkaDirectoryResources extends RestResource implements RestDirecto
                 impl.deleteFile(r.value());
                 break;
             case SHARE_FILE:
-                impl.shareFile(r.value());
+                ShareFileInfo fi = null;
+                try {
+                    fi = mapper.readValue(r.value(), ShareFileInfo.class);
+                } catch (JsonProcessingException e) {
+                    e.printStackTrace();
+                }
+                impl.shareFile(fi.filename(), fi.userId(), fi.userIdShare(), fi.password());
                 break;
             case UNSHARE_FILE:
                 impl.unshareFile(r.value());
@@ -98,20 +105,18 @@ public class KafkaDirectoryResources extends RestResource implements RestDirecto
 
     @Override
     public void deleteFile(long version, String filename, String userId, String password) {
-        Result<Void> res =  impl.deleteFile(filename, userId, password);
-        if(res.isOK()) {
-            try {
-				sync.waitForResult(publisher.publish(Topics.DELETE_FILE.name(), mapper.writeValueAsString(new DeleteFileInfo(filename, userId, password))));
-			} catch (JsonProcessingException e) {
-				e.printStackTrace();
-			}
+        try {
+            publisher.publish(Topics.DELETE_FILE_GARBAGE.name(), mapper.writeValueAsString(new DeleteFileInfo(filename, userId, password)));
+            sync.waitForResult(publisher.publish(Topics.DELETE_FILE.name(), mapper.writeValueAsString(new DeleteFileInfo(filename, userId, password))));
+
+        } catch (JsonProcessingException e1) {
+            e1.printStackTrace();
         }
-        super.resultOrThrow(res);
     }
 
     @Override
     public void shareFile(long version, String filename, String userId, String userIdShare, String password) {
-        Result<Void> res =  impl.shareFile(filename, userId, userIdShare, password);
+        Result<Void> res = impl.shareFileValidator(filename, userId, userIdShare, password);
         if(res.isOK()) {
             try {
 				sync.waitForResult(publisher.publish(Topics.SHARE_FILE.name(), mapper.writeValueAsString(new ShareFileInfo(filename, userId, userIdShare, password))));
@@ -119,7 +124,7 @@ public class KafkaDirectoryResources extends RestResource implements RestDirecto
 				e.printStackTrace();
 			}
         }
-        super.resultOrThrow(res);
+        super.resultOrThrow(impl.shareFile(filename, userId, userIdShare, password));
     }
 
     @Override
@@ -153,10 +158,10 @@ public class KafkaDirectoryResources extends RestResource implements RestDirecto
 		return super.resultOrThrow(res);
     }
 
-    static record DeleteFileInfo(String filename, String userId, String password) {		
+    public static record DeleteFileInfo(String filename, String userId, String password) {		
 	}
 
-    static record ShareFileInfo(String filename, String userId, String userIdShare, String password) {
+    public static record ShareFileInfo(String filename, String userId, String userIdShare, String password) {
     }
     
 }

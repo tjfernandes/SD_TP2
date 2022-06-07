@@ -44,7 +44,7 @@ public class KafkaJavaDirectory extends JavaDirectory {
         
         var fileId = fileId(info.getFilename(), info.getOwner());
 
-        var url = info.getFileURL().split(FileInfo.DELIMITER)[0];
+        var url = info.getFileURL().split("/files")[0];
 
         var uf = userFiles.computeIfAbsent(info.getOwner(), (k) -> new UserFiles());
 
@@ -98,28 +98,19 @@ public class KafkaJavaDirectory extends JavaDirectory {
 		if (!user.isOK())
 			return error(user.error());
 
-        var uf = userFiles.getOrDefault(userId, new UserFiles());
-        synchronized (uf) {
-            var finfo = files.remove(fileId);
-            uf.owned().remove(fileId);
-            
-            getFileCounts(finfo.uri(), false).numFiles().decrementAndGet();
-        }
+		var uf = userFiles.getOrDefault(userId, new UserFiles());
+		synchronized (uf) {
+			var i = files.remove(fileId);
+			uf.owned().remove(fileId);
 
-        return ok();
+			executor.execute(() -> this.removeSharesOfFile(i));
+			
+			getFileCounts(i.uri(), false).numFiles().decrementAndGet();
+		}
+		return ok();
     }
 
-	public Result<Void> shareFile(String value) {
-        ShareFileInfo info = null;
-        try {
-            info = mapper.readValue(value, ShareFileInfo.class);
-        } catch (JsonProcessingException e) {
-            e.printStackTrace();
-        }
-        var filename = info.filename();
-        var userId = info.userId();
-        var userIdShare = info.userIdShare();
-        var password = info.password();
+	public Result<Void> shareFileValidator(String filename, String userId, String userIdShare, String password) {
 
 		if (badParam(filename) || badParam(userId) || badParam(userIdShare))
 			return error(BAD_REQUEST);
